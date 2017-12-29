@@ -36,6 +36,7 @@ aws cloudformation delete-stack --stack-name ${SPA_NAME} --region ${REGION}
 ```
 
 ## Api Setup
+cd api
 aws cloudformation package --template-file version.yaml \
   --s3-bucket robowebi-nexus-${REGION} \
   --output-template-file version-packaged.yaml
