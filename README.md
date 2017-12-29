@@ -47,7 +47,7 @@ aws cloudformation deploy --template-file version-packaged.yaml \
 
 
 ## Invoke URL Test
-  curl -v https://v3v0rc8l1a.execute-api.us-west-2.amazonaws.com/Prod/version
+  curl -v https://z4lmbyal5h.execute-api.us-west-2.amazonaws.com/Prod/version
 
 
 ## Api Teardown
