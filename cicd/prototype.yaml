@@ -1,0 +1,36 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Serverless S3 WebSpa
+Parameters:
+
+  SpaBucketName:
+    Type: String
+    Description: Name of bucket to create to host the webSpa
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Spa Configuration"
+        Parameters:
+          - SpaBucketName
+
+    ParameterLabels:
+      SpaBucketName:
+        default: Name of S3 Bucket to create for webSpa hosting
+
+Resources:
+
+  SpaBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref SpaBucketName
+      WebSpaConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+
+Outputs:
+  SpaUrl:
+    Value: !GetAtt [SpaBucket, WebSpaURL]
+    Description: S3 WebSpa URL
