@@ -19,6 +19,10 @@ aws s3 sync --acl public-read \
  --include '*.png' \
  spa s3://${SPA_NAME} --delete
 
+## Test
+curl http://${SPA_NAME}.s3-website.${REGION}.amazonaws.com/
+
+
 ## Teardown
 aws s3 rm s3://${SPA_NAME} --recursive --region ${REGION}
 
