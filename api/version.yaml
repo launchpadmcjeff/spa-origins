@@ -1,0 +1,27 @@
+---
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Deploy the spa-origin version api
+Resources:
+  VersionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: version.handler
+      CodeUri: ./
+      Runtime: nodejs6.10
+      Events:
+        ApiEventSource:
+          Type: Api
+          Properties:
+            Path: '/version'
+            Method: GET
+
+  TimeTable:
+    Type: 'AWS::Serverless::SimpleTable'
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
