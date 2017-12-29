@@ -49,4 +49,6 @@ aws cloudformation deploy --template-file version-packaged.yaml \
   curl -v https://v3v0rc8l1a.execute-api.us-west-2.amazonaws.com/Prod/version
 
 
-
+## Api Teardown
+aws cloudformation delete-stack --stack-name ${SPA_NAME}-api-version \
+  --region ${REGION}
