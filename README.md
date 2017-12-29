@@ -1,7 +1,7 @@
 # SPA Origins
 
 
-## Setup
+## S3 Spa Bucket Setup
 ```
 export SPA_NAME=spa-origins
 
@@ -21,16 +21,32 @@ aws s3 sync --acl public-read \
  spa s3://${SPA_NAME} --delete
 ```
 
-## Test
+##  S3 Spa Bucket Test
 ```
 curl http://${SPA_NAME}.s3-website.${REGION}.amazonaws.com/
 curl -I http://${SPA_NAME}.s3-website.${REGION}.amazonaws.com/spa.html
 curl -v http://${SPA_NAME}.s3-website.${REGION}.amazonaws.com/error.html
 ```
 
-## Teardown
+##  S3 Spa Bucket Teardown
 ```
 aws s3 rm s3://${SPA_NAME} --recursive --region ${REGION}
 
 aws cloudformation delete-stack --stack-name ${SPA_NAME} --region ${REGION}
 ```
+
+## Api Setup
+aws cloudformation package --template-file version.yaml \
+  --s3-bucket robowebi-nexus-${REGION} \
+  --output-template-file version-packaged.yaml
+
+aws cloudformation deploy --template-file version-packaged.yaml \
+  --stack-name ${SPA_NAME}-api-version \
+  --capabilities CAPABILITY_IAM
+
+
+## Invoke URL Test
+  curl -v https://v3v0rc8l1a.execute-api.us-west-2.amazonaws.com/Prod/version
+
+
+
