@@ -1,0 +1,35 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Serverless S3 Spa
+Parameters:
+
+  SpaName:
+    Type: String
+    Description: Used for naming every component of the SPA
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Spa Configuration"
+        Parameters:
+          - SpaName
+
+    ParameterLabels:
+      SpaName:
+        default: Name of S3 Bucket to create for spa hosting
+
+Resources:
+
+  SpaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref SpaName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+
+Outputs:
+  SpaUrl:
+    Value: !GetAtt [SpaBucket, WebsiteURL]
+    Description: S3 SPA URL
