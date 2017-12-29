@@ -36,6 +36,7 @@ aws cloudformation delete-stack --stack-name ${SPA_NAME} --region ${REGION}
 ```
 
 ## Api Setup
+cd api
 aws cloudformation package --template-file version.yaml \
   --s3-bucket robowebi-nexus-${REGION} \
   --output-template-file version-packaged.yaml
@@ -46,7 +47,9 @@ aws cloudformation deploy --template-file version-packaged.yaml \
 
 
 ## Invoke URL Test
-  curl -v https://v3v0rc8l1a.execute-api.us-west-2.amazonaws.com/Prod/version
+  curl -v https://z4lmbyal5h.execute-api.us-west-2.amazonaws.com/Prod/version
 
 
-
+## Api Teardown
+aws cloudformation delete-stack --stack-name ${SPA_NAME}-api-version \
+  --region ${REGION}
