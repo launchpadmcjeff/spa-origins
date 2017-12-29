@@ -53,3 +53,7 @@ aws cloudformation deploy --template-file version-packaged.yaml \
 ## Api Teardown
 aws cloudformation delete-stack --stack-name ${SPA_NAME}-api-version \
   --region ${REGION}
+
+## Spa Api Integration
+spa/js/data.js needs AWS integration API URL coded
+ap/version.js needs Access-Control-AllowOrigin coded with spa.html CORS info
