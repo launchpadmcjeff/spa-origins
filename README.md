@@ -44,8 +44,9 @@ aws cloudformation deploy --template-file version-packaged.yaml \
   --stack-name ${SPA_NAME}-api-version \
   --capabilities CAPABILITY_IAM
 
-## Api with Parameter Setup
-aws cloudformation deploy --template-file version-packaged.yaml \
-  --stack-name ${SPA_NAME}-api-version \
-  --capabilities CAPABILITY_IAM \
-  --parameter-overrides AppName=svls-test-app
+
+## Invoke URL Test
+  curl -v https://v3v0rc8l1a.execute-api.us-west-2.amazonaws.com/Prod/version
+
+
+
