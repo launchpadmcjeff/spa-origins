@@ -14,7 +14,7 @@
 var spa = (function () {
     'use strict';
     var initModule = function ($container) {
-        console.log('spa initModule');
+        console.log('spa.initModule');
         spa.data.initModule();
         spa.model.initModule();
         spa.shell.initModule($container);

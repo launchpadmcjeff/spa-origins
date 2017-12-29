@@ -19,7 +19,7 @@ spa.model = (function () {
     isFakeData = true;
 
   initModule = function () {
-    console.log('spa.model initModule');
+    console.log('spa.model.initModule');
     console.log('isFakeData:', isFakeData);
 
 
