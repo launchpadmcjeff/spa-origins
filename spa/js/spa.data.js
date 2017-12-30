@@ -31,7 +31,7 @@ spa.data = (function () {
 
             })
             .fail(function (xhr, status, errorThrown) {
-                console.log("Sorry, there was a problem!");
+                console.log('ajax fail callback:');
                 console.dir(xhr);
                 console.log("Status: " + status);
                 console.log("Error: " + errorThrown);
