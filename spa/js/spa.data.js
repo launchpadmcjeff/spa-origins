@@ -41,7 +41,7 @@ spa.data = (function () {
             var cognitoUser = result.user;
             console.log(`registerUser onSuccess username=${cognitoUser.getUsername()}`);
         };
-        
+
         onFailure = function registerFailure(err) {
             console.log(`registerUser onFailure err=${err}`);
         };
@@ -93,7 +93,8 @@ spa.data = (function () {
     };
     return {
         initModule: initModule,
-        getVersion: getVersion
+        getVersion: getVersion,
+        registerUser: registerUser
     };
 }());
 
