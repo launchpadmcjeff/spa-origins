@@ -20,14 +20,14 @@ spa.data = (function () {
     };
 
     getVersion = function () {
-        console.log("dpa.data.getVersion");
+        console.log('spa.data.getVersion');
 
         $.ajax({
-            url: "https://z4lmbyal5h.execute-api.us-west-2.amazonaws.com/Prod/version",
-            type: "GET"
+            url: 'https://z4lmbyal5h.execute-api.us-west-2.amazonaws.com/Prod/version',
+            type: 'GET'
         })
             .done(function (json) {
-                console.log(json);
+                console.log('ajax done callback: ' + JSON.stringify(json));
 
             })
             .fail(function (xhr, status, errorThrown) {
@@ -37,7 +37,7 @@ spa.data = (function () {
                 console.log("Error: " + errorThrown);
             })
             .always(function (xhr, status) {
-                console.log("The request is complete!" + xhr + ' status: ' + status);
+                console.log('ajax always callback ' + JSON.stringify(xhr) + ' status: ' + status);
             });
 
 
