@@ -6,7 +6,7 @@ exports.handler = (event, context, callback) => {
 
     callback(null, {
         statusCode: '200',
-        headers: buildCorsResponseHeaders(),
+        headers: buildCorsResponseHeaders(event),
         body: JSON.stringify({ version: 'spa-origins:0.0.1', data: event })
     });
 };
