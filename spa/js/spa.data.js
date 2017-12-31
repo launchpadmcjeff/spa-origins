@@ -24,13 +24,13 @@ spa.data = (function () {
 
 
     signin = function (email, password) {
-        var signinSuccess, signinError, authenticationDetails, cognitoUser;
+        var signinSuccess, signinFailure, authenticationDetails, cognitoUser;
 
         signinSuccess = function () {
             console.log('Successfully Logged In');
            
         };
-        signinError = function (err) {
+        signinFailure = function (err) {
             console.log(err);
         };
         authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
@@ -40,8 +40,8 @@ spa.data = (function () {
 
         cognitoUser = createCognitoUser(email);
         cognitoUser.authenticateUser(authenticationDetails, {
-            onSuccess: onSuccess,
-            onFailure: onFailure
+            onSuccess: signinSuccess,
+            onFailure: signinFailure
         });
     };
 
