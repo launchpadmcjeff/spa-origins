@@ -13,7 +13,8 @@
 
 spa.data = (function () {
     'use strict';
-    var initModule, getVersion, registerUser, verify, createCognitoUser, toUsername, signin,
+    var initModule, getVersion, registerUser, verify, createCognitoUser,
+        toUsername, signin, authTokenPromise, updateAuthToken, authToken,
         poolData = {
             UserPoolId: 'eu-west-2_bFh8QySki',
             ClientId: '2tv09p627o0bfmokbgkt0b9efo'
@@ -22,13 +23,43 @@ spa.data = (function () {
         region = 'eu-west-2', // e.g. us-east-2
         invokeUrl = 'https://3gz7v5ndhf.execute-api.eu-west-2.amazonaws.com/prod'; // e.g. https://rc7nyt4tql.execute-api.us-west-2.amazonaws.com/prod',
 
+    authTokenPromise = new Promise(function fetchCurrentAuthToken(resolve, reject) {
+        var cognitoUser = userPool.getCurrentUser();
+
+        if (cognitoUser) {
+            cognitoUser.getSession(function sessionCallback(err, session) {
+                if (err) {
+                    reject(err);
+                } else if (!session.isValid()) {
+                    resolve(null);
+                } else {
+                    resolve(session.getIdToken().getJwtToken());
+                }
+            });
+        } else {
+            resolve(null);
+        }
+    });
+
+    updateAuthToken = function () {
+        authTokenPromise.then(function setAuthToken(token) {
+            if (token) {
+                authToken = token;
+                console.log(token);
+            } else {
+                console.log('needs to signing');
+            }
+        }).catch(function handleTokenError(error) {
+            console.log('needs to signing');
+        });
+    };
 
     signin = function (email, password) {
         var signinSuccess, signinFailure, authenticationDetails, cognitoUser;
 
         signinSuccess = function () {
             console.log('Successfully Logged In');
-           
+
         };
         signinFailure = function (err) {
             console.log(err);
@@ -140,7 +171,8 @@ spa.data = (function () {
         getVersion: getVersion,
         registerUser: registerUser,
         verify: verify,
-        signin: signin
+        signin: signin,
+        updateAuthToken: updateAuthToken
     };
 }());
 
