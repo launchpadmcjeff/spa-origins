@@ -13,7 +13,7 @@
 
 spa.data = (function () {
     'use strict';
-    var initModule, getVersion, registerUser,
+    var initModule, getVersion, registerUser, verify, createCognitoUser, toUsername,
         poolData = {
             UserPoolId: 'eu-west-2_bFh8QySki',
             ClientId: '2tv09p627o0bfmokbgkt0b9efo'
@@ -23,19 +23,41 @@ spa.data = (function () {
         invokeUrl = 'https://3gz7v5ndhf.execute-api.eu-west-2.amazonaws.com/prod'; // e.g. https://rc7nyt4tql.execute-api.us-west-2.amazonaws.com/prod',
 
 
+    verify = function (email, code) {
+        var onSuccess, onFailure;
 
+        onSuccess = function verifySuccess(result) {
+            console.log(`verifySuccess callResult=${result}`);
+        };
+        onFailure = function verifyError(err) {
+            console.log(err);
+        };
+
+        createCognitoUser(email).confirmRegistration(code, true, function confirmCallback(err, result) {
+            if (!err) {
+                onSuccess(result);
+            } else {
+                onFailure(err);
+            }
+        });
+    }
+
+    createCognitoUser = function (email) {
+        return new AmazonCognitoIdentity.CognitoUser({
+            Username: toUsername(email),
+            Pool: userPool
+        });
+    }
+    toUsername = function (email) {
+        return email.replace('@', '-at-');
+    };
     registerUser = function (email, password) {
-        var toUsername, onSuccess, onFailure,
+        var onSuccess, onFailure,
             dataEmail = {
                 Name: 'email',
                 Value: email
             },
             attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail);
-
-
-        toUsername = function (email) {
-            return email.replace('@', '-at-');
-        };
 
         onSuccess = function registerSuccess(result) {
             var cognitoUser = result.user;
@@ -94,7 +116,8 @@ spa.data = (function () {
     return {
         initModule: initModule,
         getVersion: getVersion,
-        registerUser: registerUser
+        registerUser: registerUser,
+        verify: verify
     };
 }());
 
