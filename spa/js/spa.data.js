@@ -13,7 +13,7 @@
 
 spa.data = (function () {
     'use strict';
-    var initModule, getVersion, registerUser, verify, createCognitoUser, toUsername,
+    var initModule, getVersion, registerUser, verify, createCognitoUser, toUsername, signin,
         poolData = {
             UserPoolId: 'eu-west-2_bFh8QySki',
             ClientId: '2tv09p627o0bfmokbgkt0b9efo'
@@ -22,6 +22,28 @@ spa.data = (function () {
         region = 'eu-west-2', // e.g. us-east-2
         invokeUrl = 'https://3gz7v5ndhf.execute-api.eu-west-2.amazonaws.com/prod'; // e.g. https://rc7nyt4tql.execute-api.us-west-2.amazonaws.com/prod',
 
+
+    signin = function (email, password) {
+        var signinSuccess, signinError, authenticationDetails, cognitoUser;
+
+        signinSuccess = function () {
+            console.log('Successfully Logged In');
+           
+        };
+        signinError = function (err) {
+            console.log(err);
+        };
+        authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+            Username: toUsername(email),
+            Password: password
+        });
+
+        cognitoUser = createCognitoUser(email);
+        cognitoUser.authenticateUser(authenticationDetails, {
+            onSuccess: onSuccess,
+            onFailure: onFailure
+        });
+    };
 
     verify = function (email, code) {
         var onSuccess, onFailure;
@@ -117,7 +139,8 @@ spa.data = (function () {
         initModule: initModule,
         getVersion: getVersion,
         registerUser: registerUser,
-        verify: verify
+        verify: verify,
+        signin: signin
     };
 }());
 
