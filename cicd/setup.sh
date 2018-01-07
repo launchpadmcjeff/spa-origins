@@ -3,6 +3,7 @@
 export SPA_NAME=spa-origins
 export REGION=us-east-1
 export SPA_DOMAIN_NAME=robowe.be
+export GIT_BRANCH=cloudfront-integration
 
 function getBooleanHss {
 	echo "getBooleanHss [1/0y/n/Y/N]"
@@ -39,6 +40,7 @@ function install {
         ParameterKey=SiteUploadBucketName,ParameterValue=${SPA_NAME}-upload-${REGION} \
         ParameterKey=PipelineBucketName,ParameterValue=${SPA_NAME}-pipeline-${REGION} \
         ParameterKey=CodeCommitRepo,ParameterValue=${SPA_NAME} \
+        ParameterKey=CodeCommitBranch,ParameterValue=${GIT_BRANCH} \
         --capabilities CAPABILITY_IAM
 }
 
