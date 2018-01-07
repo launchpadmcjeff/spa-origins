@@ -147,7 +147,7 @@ spa.data = (function () {
         console.log('spa.data.getVersion');
 
         $.ajax({
-            url: 'https://z4lmbyal5h.execute-api.us-west-2.amazonaws.com/Prod/version',
+            url: 'https://28j30zbyig.execute-api.us-east-1.amazonaws.com/Prod/version',
             type: 'GET'
         })
             .done(function (json) {
