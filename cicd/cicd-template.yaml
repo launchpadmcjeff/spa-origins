@@ -1,0 +1,375 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Simple continuous delivery of a SPA to S3
+Parameters:
+  SpaName:
+    Type: String
+    Description: Identifier for the SPA
+  SpaDomainName:
+    Type: String
+    Description: SPA DNS domain
+  HostedZoneId:
+    Type: String
+    Default: Z1Q1ZYNVRFUCE
+    Description: The Route53 domain HostedZoneId
+  AcmCertificateArn:
+    Type: String
+    Description: AWS Certificate Manager SSL Cert Arn
+    Default: arn:aws:acm:us-east-1:737930803050:certificate/ea5e1a39-3316-48a7-9ea5-17f3457938fe
+    AllowedPattern: "arn:aws:acm:.*"
+  SiteBucketName:
+    Type: String
+    Description: Name of bucket to create to host the website
+    Default: robowe.be
+  SiteUploadBucketName:
+    Type: String
+    Description: Name of bucket to create to host the website uploads
+  PipelineBucketName:
+    Type: String
+    Description: Name of bucket to create Codepipeline
+  CodeCommitRepo:
+    Type: String
+    Description: Git Repo to pull from. Only the Name. not the URL
+  CodeCommitBranch:
+    Type: String
+    Description: Git Branch to build
+    Default: "master"
+  BuildType:
+    Type: String
+    Description: The build container type to use for building the app
+    Default: "LINUX_CONTAINER"
+  BuildComputeType:
+    Type: String
+    Description: The build compute type to use for building the app
+    Default: "BUILD_GENERAL1_SMALL"
+  BuildImage:
+    Type: String
+    Description: The build image to use for building the app
+    Default: "aws/codebuild/nodejs:7.0.0"
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Site Configuration"
+        Parameters:
+          - SpaName
+          - SiteBucketName
+          - SiteUploadBucketName
+      - Label:
+          default: "Git Configuration"
+        Parameters:
+          - CodeCommitRepo
+          - CodeCommitBranch
+      - Label:
+          default: "Build Configuration"
+        Parameters:
+          - BuildType
+          - BuildComputeType
+          - BuildImage
+    ParameterLabels:
+      SiteBucketName:
+        default: Name of S3 Bucket to create for website hosting
+      SiteUploadBucketName:
+        default: Name of S3 Bucket to create for website uploads hosting
+      CodeCommitRepo: 
+        default: Git Repository Name
+      CodeCommitBranch: 
+        default: Git Branch Name
+      BuildType: 
+        default: CodeBuild type
+      BuildComputeType: 
+        default: CodeBuild instance type
+      BuildImage: 
+        default: CodeBuild image
+Resources:
+  CFNPipelinePolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      Description: CloudFormation Pipeline Execution Policy
+      Path: /
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Action:
+            - 'cloudformation:CreateStack'
+            - 'cloudformation:DescribeStacks'
+            - 'cloudformation:DeleteStack'
+            - 'cloudformation:UpdateStack'
+            - 'cloudformation:CreateChangeSet'
+            - 'cloudformation:ExecuteChangeSet'
+            - 'cloudformation:DeleteChangeSet'
+            - 'cloudformation:DescribeChangeSet'
+            - 'cloudformation:SetStackPolicy'
+            - 'cloudformation:SetStackPolicy'
+            - 'cloudformation:ValidateTemplate'
+            - 'codebuild:StartBuild'
+            - 'codebuild:BatchGetBuilds'
+          Resource: '*'
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codebuild.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AWSCodeCommitFullAccess'
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        - 'arn:aws:iam::aws:policy/CloudFrontFullAccess'
+        - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
+        - !Ref CFNPipelinePolicy      
+      Policies:
+      - PolicyName: codebuild-service
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - 'logs:CreateLogGroup'
+                - 'logs:CreateLogStream'
+                - 'logs:PutLogEvents'
+              Resource: '*'
+            - Effect: Allow
+              Action: 's3:*'
+              Resource: "*"
+            - Action: ["lambda:*"]
+              Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+              Effect: Allow
+            - Action: ["apigateway:*"]
+              Resource: !Sub "arn:aws:apigateway:${AWS::Region}::*"
+              Effect: Allow
+            - Action: ["iam:GetRole", "iam:CreateRole", "iam:DeleteRole"]
+              Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/simple-spa-api-*"
+              Effect: Allow
+            - Action: ["iam:AttachRolePolicy", "iam:DetachRolePolicy"]
+              Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/simple-spa-api-*"
+              Effect: Allow
+            - Action: ["iam:PassRole"]
+              Resource: ["*"]
+              Effect: Allow
+            - Action: ["cloudformation:CreateChangeSet"]
+              Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:aws:transform/Serverless-2016-10-31"
+              Effect: Allow
+
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codepipeline.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AWSCodeCommitFullAccess'
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        - !Ref CFNPipelinePolicy
+      Policies:
+      - PolicyName: codepipeline-service
+        PolicyDocument:
+          Statement:
+          - Action:
+            - codebuild:*
+            Resource: "*"
+            Effect: Allow
+          - Action:
+            - s3:GetObject
+            - s3:GetObjectVersion
+            - s3:GetBucketVersioning
+            Resource: "*"
+            Effect: Allow
+          - Action:
+            - s3:PutObject
+            Resource:
+            - arn:aws:s3:::codepipeline*
+            Effect: Allow
+          - Action:
+            - s3:*
+            - cloudformation:*
+            - iam:PassRole
+            Resource: "*"
+            Effect: Allow
+          Version: '2012-10-17'
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub ${SpaName}.${SpaDomainName}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+  SiteUploadBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref SiteUploadBucketName
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            AllowedOrigins:
+              - '*'
+
+  SiteDistro:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Sub ${SpaName}.${SpaDomainName}
+        Comment: !Sub Cloudfront distro for ${SpaName}
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          DefaultTTL: 86400
+          ForwardedValues:
+            QueryString: false
+          MaxTTL: 31536000
+          MinTTL: 0
+          SmoothStreaming: false
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        Origins:
+          - Id: S3Origin
+            DomainName: !Sub ${SpaName}.${SpaDomainName}.s3.amazonaws.com
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref AcmCertificateArn
+          SslSupportMethod: sni-only
+      Tags:
+        - Key: SpaName
+          Value: spa-www
+
+
+  PipelineBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref PipelineBucketName
+  CodeBuildDeploySite:
+    Type: AWS::CodeBuild::Project
+    DependsOn: CodeBuildRole
+    Properties:
+      Name: !Sub '${SpaName}-build'
+      Description: Deploy site to S3
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: !Ref BuildType
+        ComputeType: !Ref BuildComputeType
+        Image: !Sub ${BuildImage}
+        EnvironmentVariables:
+        - Name: SITE_BUCKET
+          Type: PLAINTEXT
+          Value: !Ref SiteBucket
+        - Name: CF_DIST_ID
+          Type: PLAINTEXT
+          Value: !Ref SiteDistro
+        - Name: PIPELINE_BUCKET
+          Type: PLAINTEXT
+          Value: !Ref PipelineBucket
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: cicd/buildspec.yml
+      TimeoutInMinutes: 10
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub '${SpaName}-pipeline'
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+      - Name: Source
+        Actions:
+        - Name: Source
+          ActionTypeId:
+            Category: Source
+            Owner: AWS
+            Version: '1'
+            Provider: CodeCommit
+          InputArtifacts: []
+          OutputArtifacts:
+          - Name: SourceOutput
+          Configuration:
+            RepositoryName: !Ref CodeCommitRepo
+            BranchName: !Ref CodeCommitBranch
+            PollForSourceChanges: true
+          RunOrder: 1
+      - Name: Deploy
+        Actions:
+        - Name: Artifact
+          ActionTypeId:
+            Category: Build
+            Owner: AWS
+            Version: '1'
+            Provider: CodeBuild
+          InputArtifacts:
+          - Name: SourceOutput
+          OutputArtifacts:
+          - Name: DeployOutput
+          Configuration:
+            ProjectName: !Ref CodeBuildDeploySite
+          RunOrder: 1
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineBucket
+
+  DnsEntry:
+    Type: "AWS::Route53::RecordSet"
+    Properties: 
+      Comment: String
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub ${SpaName}.${SpaDomainName}.
+      ResourceRecords:
+        - !GetAtt  SiteDistro.DomainName
+      TTL: 300
+      Type: CNAME
+
+Outputs:
+  PipelineUrl:
+    Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
+    Description: CodePipeline URL
+  SiteBucketName:
+    Value: !Ref SiteBucket
+    Description: S3 Website Bucket Name
+  SiteUploadBucketName:
+    Value: !Ref SiteUploadBucket
+    Description: S3 Upload Bucket Name
+  S3SiteUrl:
+    Value: !GetAtt [SiteBucket, WebsiteURL]
+    Description: S3 Website URL
+  S3UploadUrl:
+    Value: !GetAtt [SiteUploadBucket, WebsiteURL]
+    Description: S3 Website Upload URL
+  DistroUrl:
+    Value: !Join ['', ['https://', !GetAtt SiteDistro.DomainName] ]
+    Description: Cloudfront Website URL
+  WwwSiteUrl:
+    Value: !Join ['', ['https://', !Ref SpaName, '.', !Ref SpaDomainName]]
+    Description: Public Website URL
+
