@@ -9,7 +9,7 @@
   regexp : true, sloppy  : true, vars     : false,
   white  : true
 */
-/*global $, spa, AWSCognito, AmazonCognitoIdentity */
+/*global $, spa, AWSCognito, AmazonCognitoIdentity, Promise */
 
 spa.data = (function () {
     'use strict';
@@ -47,10 +47,10 @@ spa.data = (function () {
                 authToken = token;
                 console.log(token);
             } else {
-                console.log('needs to signing');
+                console.log('needs to sign-in');
             }
         }).catch(function handleTokenError(error) {
-            console.log('needs to signing');
+            console.log('needs to sign-in:', error);
         });
     };
 
