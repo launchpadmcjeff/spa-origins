@@ -14,19 +14,26 @@ exports.handler = (event, context, callback) => {
 function buildCorsResponseHeaders(event) {
     var response_headers = {};
     if (event.headers !== null) {
-
-        console.log(event.headers.origin);
-        if (event.headers.origin !== null && event.headers.origin === 'https://dzmn9fyn6d0w8.cloudfront.net') {
-            response_headers = {
-                'Access-Control-Allow-Origin': 'https://dzmn9fyn6d0w8.cloudfront.net',
-                'Vary': 'Origin'
-            };
-        }
-        else if (event.headers.origin !== null && event.headers.origin === 'http://spa-origins.s3-website.us-west-2.amazonaws.com') {
-            response_headers = {
-                'Access-Control-Allow-Origin': 'http://spa-origins.s3-website.us-west-2.amazonaws.com',
-                'Vary': 'Origin'
-            };
+        if (event.headers.origin !== null) {
+            console.log(event.headers.origin);
+            if (event.headers.origin === 'https://spa-origins.robowe.be') {
+                response_headers = {
+                    'Access-Control-Allow-Origin': 'https://spa-origins.robowe.be',
+                    'Vary': 'Origin'
+                };
+            }
+            else if (event.headers.origin === 'https://d5jhbqfxgppt5.cloudfront.net') {
+                response_headers = {
+                    'Access-Control-Allow-Origin': 'https://d5jhbqfxgppt5.cloudfront.net',
+                    'Vary': 'Origin'
+                };
+            }
+            else if (event.headers.origin === 'http://spa-origins.robowe.be.s3-website-us-east-1.amazonaws.com') {
+                response_headers = {
+                    'Access-Control-Allow-Origin': 'http://spa-origins.robowe.be.s3-website-us-east-1.amazonaws.com',
+                    'Vary': 'Origin'
+                };
+            }
         }
     }
     return response_headers;
