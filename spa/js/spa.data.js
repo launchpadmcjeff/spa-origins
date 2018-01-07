@@ -21,7 +21,7 @@ spa.data = (function () {
         },
         userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData),
         region = 'eu-west-2', // e.g. us-east-2
-        invokeUrl = 'https://3gz7v5ndhf.execute-api.eu-west-2.amazonaws.com/prod'; // e.g. https://rc7nyt4tql.execute-api.us-west-2.amazonaws.com/prod',
+        invokeUrl = 'https://28j30zbyig.execute-api.us-east-1.amazonaws.com/Prod/version';
 
     authTokenPromise = new Promise(function fetchCurrentAuthToken(resolve, reject) {
         var cognitoUser = userPool.getCurrentUser();
