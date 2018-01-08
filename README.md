@@ -12,7 +12,7 @@ export REGION=us-east-1
 Then run the following:
 
 ```
-cicd/setup.sh uninstall
+cicd/setup.sh install
 ```
 
 The Source stage of the codepipeline will fail, because there is no

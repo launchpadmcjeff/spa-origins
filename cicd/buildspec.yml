@@ -28,7 +28,7 @@ phases:
     commands:
       - echo post_build phase...started on `date`
       - cd $CODEBUILD_SRC_DIR
-      - aws s3 sync --acl public-read --exclude '*' --include '*.html' --include 'favicon.ico' --include 'images/*' --include 'css/*' --include 'js/*' --exclude 'js/node_modules' spa s3://${SITE_BUCKET} --delete
+      - aws s3 sync --acl public-read --exclude '*' --include '*.html' --include 'favicon.ico' --include 'img/*' --include 'css/*' --include 'js/*' --exclude 'js/node_modules' spa s3://${SITE_BUCKET} --delete
       - aws cloudfront create-invalidation --distribution-id $CF_DIST_ID --paths '/*'
 artifacts:
   files:
