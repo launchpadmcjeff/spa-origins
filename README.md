@@ -1,25 +1,45 @@
-# SPA Origins
+# SPA Origins - Where SPA Evolves
 
+## Deployment Steps
+Update the cicd/setup.sh file to use your settings for SPA_NAME
+and region like so:
 
-## S3 Spa Bucket Setup
 ```
 export SPA_NAME=spa-origins
-
-export REGION=us-west-2
-
-aws cloudformation create-stack --region ${REGION} \
- --stack-name ${SPA_NAME} \
- --template-body file://cicd/prototype.yaml \
- --parameters ParameterKey=SpaName,ParameterValue=${SPA_NAME}
-
-aws s3 sync --acl public-read \
- --exclude '*' \
- --include 'css/*' \
- --include 'js/*' \
- --include '*.html' \
- --include '*.png' \
- spa s3://${SPA_NAME} --delete
+export REGION=us-east-1
 ```
+
+Then run the following:
+
+```
+cicd/setup.sh install
+```
+
+The Source stage of the codepipeline will fail, because there is no
+repo.  Configure one:
+```
+aws codecommit create-repository --region us-east-1 --repository-name spa-origins --repository-description 'Repo for spa-origins'
+```
+
+Configure us-east-1 as a git remote and push:
+```
+git remote add us-east-1 <cloneUrlHttp>
+git push --all us-east-1
+```
+
+The codepipeline should automatically start and push the code to the web.
+
+## Teardown Steps
+run the following:
+
+```
+cicd/setup.sh uninstall
+```
+
+## TODO
+Add build badge enabled to codedeploy project
+https://docs.aws.amazon.com/codebuild/latest/userguide/sample-build-badges.html
+
 
 ##  S3 Spa Bucket Test
 ```
@@ -28,26 +48,8 @@ curl -I http://${SPA_NAME}.s3-website.${REGION}.amazonaws.com/spa.html
 curl -v http://${SPA_NAME}.s3-website.${REGION}.amazonaws.com/error.html
 ```
 
-##  S3 Spa Bucket Teardown
-```
-aws s3 rm s3://${SPA_NAME} --recursive --region ${REGION}
-
-aws cloudformation delete-stack --stack-name ${SPA_NAME} --region ${REGION}
-```
-
-## Api Setup
-cd api
-aws cloudformation package --template-file version.yaml \
-  --s3-bucket robowebi-nexus-${REGION} \
-  --output-template-file version-packaged.yaml
-
-aws cloudformation deploy --template-file version-packaged.yaml \
-  --stack-name ${SPA_NAME}-api-version \
-  --capabilities CAPABILITY_IAM
-
-
 ## Invoke URL Test
-  curl -v https://z4lmbyal5h.execute-api.us-west-2.amazonaws.com/Prod/version
+  curl -v https://Cfn::WwwSiteUrl/Prod/version
 
 
 ## Api Teardown
@@ -57,3 +59,4 @@ aws cloudformation delete-stack --stack-name ${SPA_NAME}-api-version \
 ## Spa Api Integration
 spa/js/data.js needs AWS integration API URL coded
 ap/version.js needs Access-Control-AllowOrigin coded with spa.html CORS info
+

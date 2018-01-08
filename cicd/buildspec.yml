@@ -1,0 +1,36 @@
+version: 0.2
+env:
+  variables:
+    SPA_NAME: "spa-origins"
+phases:
+  install:
+    commands:
+      - echo install phase...started on `date` CODEBUILD_SRC_DIR is $CODEBUILD_SRC_DIR
+      - echo SPA_NAME is $SPA_NAME
+      - echo SITE_BUCKET is $SITE_BUCKET
+      - echo CF_DIST_ID is $CF_DIST_ID
+      - echo PIPELINE_BUCKET is $PIPELINE_BUCKET
+      - cd $CODEBUILD_SRC_DIR/api/version && npm install
+      - cd $CODEBUILD_SRC_DIR/spa/js && npm install
+  pre_build:
+    commands:
+      - echo pre_build phase...started on `date`
+      - cd $CODEBUILD_SRC_DIR/spa/js
+      - npm test
+  build:
+    commands:
+      - echo build phase...started on `date`
+      - cd $CODEBUILD_SRC_DIR/api/version
+      - aws cloudformation package --template version.yaml --s3-bucket $PIPELINE_BUCKET --output-template version-sam.yaml
+      - aws cloudformation deploy --template-file version-sam.yaml --stack-name ${SPA_NAME}-api-version --capabilities CAPABILITY_IAM
+
+  post_build:
+    commands:
+      - echo post_build phase...started on `date`
+      - cd $CODEBUILD_SRC_DIR
+      - aws s3 sync --acl public-read --exclude '*' --include '*.html' --include 'favicon.ico' --include 'img/*' --include 'css/*' --include 'js/*' --exclude 'js/node_modules' spa s3://${SITE_BUCKET} --delete
+      - aws cloudfront create-invalidation --distribution-id $CF_DIST_ID --paths '/*'
+artifacts:
+  files:
+    - spa/*
+  discard-paths: no
